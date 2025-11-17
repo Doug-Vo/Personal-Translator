@@ -1,31 +1,36 @@
 <!DOCTYPE html>
-<!-- The 'dark' class will be added here by JavaScript -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PeTS - Personal Translator</title>
     
-    <!-- Link to your external CSS file -->
+    <!-- Link to external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="page-body">
 
+    <!-- Top Header Bar -->
+    <header class="app-header">
+        <div class="header-container">
+            <!-- Spacer to push title to center -->
+            <div class="header-spacer-left"></div>
+            
+            <!-- Title -->
+            <h1 class="header-title">PeTS</h1>
+            
+            <!-- Theme Toggle Button -->
+            <div class="theme-toggle-container">
+                <button id="theme-toggle" class="theme-toggle-button">
+                    <svg id="theme-toggle-dark-icon" class="icon hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-1.646 5.646a1 1 0 01-1.414 0l-.707-.707a1 1 0 111.414-1.414l.707.707a1 1 0 010 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1zM5.05 16.95l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414-1.414zM16.95 5.05a1 1 0 01-1.414 0l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content Area -->
     <div class="container">
-
-        <!-- Theme Toggle Button -->
-        <div class="theme-toggle-container">
-            <button id="theme-toggle" class="theme-toggle-button">
-                <svg id="theme-toggle-dark-icon" class="icon hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                <svg id="theme-toggle-light-icon" class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-1.646 5.646a1 1 0 01-1.414 0l-.707-.707a1 1 0 111.414-1.414l.707.707a1 1 0 010 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1zM5.05 16.95l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414-1.414zM16.95 5.05a1 1 0 01-1.414 0l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1z"></path></svg>
-            </button>
-        </div>
-        
-        <!-- Header -->
-        <div class="header">
-            <h1 class="title">PeTS</h1>
-            <p class="subtitle">Your Personal Translator</p>
-        </div>
         
         <!-- Main Translator Card -->
         <div class="translator-card">
@@ -62,18 +67,15 @@
 
             </div>
 
-            <!-- Translate Button and Spinner -->
+            <!-- Spinner -->
             <div class="button-container">
-                <button id="btn-translate" class="translate-button">
-                    Translate
-                </button>
                 <div id="spinner" class="spinner hidden"></div>
             </div>
 
         </div>
     </div>
 
-    <!-- Link to your JavaScript file -->
+    <!-- Link to JavaScript file -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
