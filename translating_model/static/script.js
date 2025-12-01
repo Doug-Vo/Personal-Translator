@@ -1,25 +1,37 @@
 document.addEventListener("DOMContentLoaded", () => {
     
-    // This prevents the API from being called on every keystroke
+    // Utilities
+    // Prevents API spam by waiting until user stops typing
     function debounce(func, delay) {
         let timeoutId;
         return (...args) => {
             clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                func.apply(this, args);
-            }, delay);
+            timeoutId = setTimeout(() => { func.apply(this, args); }, delay);
         };
     }
 
-    // Get Elements
-    const textEn = document.getElementById("text-en");
-    const textFi = document.getElementById("text-fi");
-    const copyEn = document.getElementById("copy-en");
-    const copyFi = document.getElementById("copy-fi");
-    const clearEn = document.getElementById("clear-en");
-    const clearFi = document.getElementById("clear-fi");
-    
-    // Theme Toggle Logic
+    // Elements Configuration
+    // This object maps language codes to their corresponding DOM elements
+    const boxes = {
+        en: { 
+            text: document.getElementById("text-en"), 
+            clear: document.getElementById("clear-en"), 
+            copy: document.getElementById("copy-en") 
+        },
+        fi: { 
+            text: document.getElementById("text-fi"), 
+            clear: document.getElementById("clear-fi"), 
+            copy: document.getElementById("copy-fi") 
+        },
+        vi: { 
+            text: document.getElementById("text-vi"), 
+            clear: document.getElementById("clear-vi"), 
+            copy: document.getElementById("copy-vi") 
+        }
+    };
+    const spinner = document.getElementById("spinner");
+
+    // Theme Logic
     const themeToggleBtn = document.getElementById("theme-toggle");
     const darkIcon = document.getElementById("theme-toggle-dark-icon");
     const lightIcon = document.getElementById("theme-toggle-light-icon");
@@ -27,103 +39,121 @@ document.addEventListener("DOMContentLoaded", () => {
     function applyTheme() {
         const userTheme = localStorage.getItem("theme");
         const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        
         if (userTheme === "dark" || (!userTheme && systemPrefersDark)) {
             document.documentElement.classList.add("dark");
-            lightIcon.classList.add("hidden");
+            lightIcon.classList.add("hidden"); 
             darkIcon.classList.remove("hidden");
         } else {
             document.documentElement.classList.remove("dark");
-            lightIcon.classList.remove("hidden");
+            lightIcon.classList.remove("hidden"); 
             darkIcon.classList.add("hidden");
         }
     }
+
     themeToggleBtn.addEventListener("click", () => {
         const isDark = document.documentElement.classList.toggle("dark");
         localStorage.setItem("theme", isDark ? "dark" : "light");
-        lightIcon.classList.toggle("hidden", isDark);
+        lightIcon.classList.toggle("hidden", isDark); 
         darkIcon.classList.toggle("hidden", !isDark);
     });
     applyTheme();
 
-
-    // Copy Button Logic 
-    function showCopiedFeedback(buttonElement) {
-        const originalIcon = buttonElement.innerHTML;
-        const checkIcon = `
-            <svg class="icon" style="color: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-        `;
-        buttonElement.innerHTML = checkIcon;
-        setTimeout(() => { buttonElement.innerHTML = originalIcon; }, 1500);
+    // UI Helpers
+    function showSpinner(show) {
+        spinner.classList.toggle("hidden", !show);
     }
-    copyEn.addEventListener("click", () => {
-        if (textEn.value.trim() === "") return;
-        navigator.clipboard.writeText(textEn.value);
-        showCopiedFeedback(copyEn);
-    });
-    copyFi.addEventListener("click", () => {
-        if (textFi.value.trim() === "") return;
-        navigator.clipboard.writeText(textFi.value);
-        showCopiedFeedback(copyFi);
-    });
 
-    // Clear Button Logic
-    clearEn.addEventListener("click", () => {
-        textEn.value = "";
-        textFi.value = ""; // Also clear the other box
-        clearEn.classList.add("hidden");
-        clearFi.classList.add("hidden");
-    });
-    clearFi.addEventListener("click", () => {
-        textEn.value = "";
-        textFi.value = ""; // Also clear the other box
-        clearEn.classList.add("hidden");
-        clearFi.classList.add("hidden");
-    });
+    function showCopiedFeedback(btn) {
+        const original = btn.innerHTML;
+        // Green checkmark icon
+        btn.innerHTML = `<svg class="icon" style="color: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+        setTimeout(() => { btn.innerHTML = original; }, 1500);
+    }
 
+    // Core Logic
     
-    async function translate(originText, destLang) {
-        if (!originText) {
-            return { translation: "" }; // Return empty if no text
+    // Setup Listeners for Clear & Copy Buttons (Generic for all languages)
+    Object.keys(boxes).forEach(lang => {
+        const el = boxes[lang];
+        
+        // Copy Button Logic
+        if(el.copy) {
+            el.copy.addEventListener("click", () => {
+                if (el.text.value.trim() === "") return;
+                navigator.clipboard.writeText(el.text.value);
+                showCopiedFeedback(el.copy);
+            });
         }
-        
-        
+
+        // Clear Button Logic (Clears everything)
+        if(el.clear) {
+            el.clear.addEventListener("click", () => {
+                // Clear all boxes to keep them in sync
+                Object.values(boxes).forEach(b => {
+                    b.text.value = "";
+                    b.clear.classList.add("hidden");
+                });
+            });
+        }
+
+        // Toggle clear button visibility on input
+        if(el.text) {
+            el.text.addEventListener("input", () => {
+                el.clear.classList.toggle("hidden", el.text.value === "");
+            });
+        }
+    });
+
+    // Translation API Call
+    async function performTranslation(sourceText, sourceLang) {
+        // If input is cleared, clear all other boxes too
+        if (!sourceText.trim()) {
+            Object.keys(boxes).forEach(key => {
+                if (key !== sourceLang) {
+                    boxes[key].text.value = "";
+                    boxes[key].clear.classList.add("hidden");
+                }
+            });
+            return;
+        }
+
+        showSpinner(true);
         try {
             const response = await fetch("/api/translate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    origin_text: originText,
-                    dest_lan: destLang,
-                }),
+                body: JSON.stringify({ text: sourceText, source_lang: sourceLang }),
             });
-            if (!response.ok) throw new Error("API failed");
-            return await response.json(); 
-        } catch (error) {
-            console.error("Translation error:", error);
-            return { translation: "Error: Could not translate." };
+            
+            if (!response.ok) throw new Error("API Failed");
+            
+            const results = await response.json();
+            
+            // The API returns a dictionary like { "fi": "...", "vi": "..." }
+            // We iterate through the results and update the corresponding boxes
+            Object.keys(results).forEach(langKey => {
+                if (boxes[langKey]) {
+                    boxes[langKey].text.value = results[langKey];
+                    // Show the clear button since we added text
+                    boxes[langKey].clear.classList.remove("hidden");
+                }
+            });
+
+        } catch (e) {
+            console.error("Translation failed", e);
         } finally {
+            showSpinner(false);
         }
     }
 
-    // Event Listeners with Debounce
-    const debouncedTranslate = debounce(async (sourceElement, targetElement, destLang) => {
-        const data = await translate(sourceElement.value, destLang);
-        targetElement.value = data.translation;
-        clearEn.classList.toggle("hidden", textEn.value === "");
-        clearFi.classList.toggle("hidden", textFi.value === "");
-    }, 500); // 500ms delay
+    // Attach Debounced Translation to Inputs
+    const debouncedTranslate = debounce(performTranslation, 600);
 
-    // Listen for input on the English box
-    textEn.addEventListener("input", () => {
-        clearEn.classList.toggle("hidden", textEn.value === "");
-        debouncedTranslate(textEn, textFi, "fi");
+    Object.keys(boxes).forEach(lang => {
+        boxes[lang].text.addEventListener("input", () => {
+            debouncedTranslate(boxes[lang].text.value, lang);
+        });
     });
 
-    // Listen for input on the Finnish box
-    textFi.addEventListener("input", () => {
-        clearFi.classList.toggle("hidden", textFi.value === "");
-        debouncedTranslate(textFi, textEn, "en");
-    });
 });

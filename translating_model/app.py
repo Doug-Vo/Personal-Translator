@@ -14,8 +14,8 @@ translator = Translator()
 def translate_with_google(text, src, dest):
     """Translates text using the Google Translate API."""
     try:
-        # # add a small delay 
-        # time.sleep(0.5)
+        # add a small delay 
+        time.sleep(0.1)
         result = translator.translate(text, src=src, dest=dest)
         return result.text
     except Exception as e:
@@ -33,22 +33,25 @@ def home():
 def api_translate():
 
     query = request.get_json()
-    translated_text = None
-    original_text = query.get("origin_text")
-    dest_lan = query.get("dest_lan")
+    results = {}
+    original_text = query.get("text")
+    source_lang = query.get("source_lang")
+
+    languages  = ['en', 'fi', 'vi']
+
+    if not original_text or not source_lang:
+        return jsonify({"error": "Missing Data!"}), 400
 
     # Call the correct function based on the language choice
-    if dest_lan == 'fi':
-        translated_text = translate_with_google(original_text, 'en', 'fi')
-        logging.info(f"Translating from English: {original_text} \
-                        \ninto Finnish: {translated_text}")
-    else:
-        translated_text = translate_with_google(original_text, 'fi', 'en')            
-        logging.info(f"Translating from Finnish: {original_text} \
-                        \ninto English: {translated_text}")
+    for lang in languages:
+        if lang != source_lang:
+            translate = translate_with_google(original_text, source_lang, lang)
+            results[lang] = translate
+
+            logging.info(f"Translated into {lang}!")
         
 
-    return jsonify({"translation": translated_text})
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True)
