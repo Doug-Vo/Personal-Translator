@@ -1,0 +1,11 @@
+# Flask Web Framework
+Flask
+
+
+# Library for Google Translate (specific version)
+googletrans==4.0.0-rc1
+
+requests
+gunicorn
+
+colorama
