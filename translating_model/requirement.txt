@@ -1,14 +1,11 @@
 # Flask Web Framework
 Flask
 
-# Hugging Face Transformers for loading the local model
-transformers
 
-# PyTorch (required by transformers for the models)
-torch
-
-# SentencePiece (tokenizer for the Helsinki-NLP models)
-sentencepiece
-
-# Library for Google Translate comparison (specific version)
+# Library for Google Translate (specific version)
 googletrans==4.0.0-rc1
+
+requests
+gunicorn
+
+colorama
