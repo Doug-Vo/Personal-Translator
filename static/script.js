@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Utilities
-    // Prevents API spam by waiting until user stops typing
+    //  Utilities 
     function debounce(func, delay) {
         let timeoutId;
         return (...args) => {
@@ -10,28 +9,15 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // Elements Configuration
-    // This object maps language codes to their corresponding DOM elements
+    //  Elements 
     const boxes = {
-        en: { 
-            text: document.getElementById("text-en"), 
-            clear: document.getElementById("clear-en"), 
-            copy: document.getElementById("copy-en") 
-        },
-        fi: { 
-            text: document.getElementById("text-fi"), 
-            clear: document.getElementById("clear-fi"), 
-            copy: document.getElementById("copy-fi") 
-        },
-        vi: { 
-            text: document.getElementById("text-vi"), 
-            clear: document.getElementById("clear-vi"), 
-            copy: document.getElementById("copy-vi") 
-        }
+        en: { text: document.getElementById("text-en"), clear: document.getElementById("clear-en"), copy: document.getElementById("copy-en") },
+        fi: { text: document.getElementById("text-fi"), clear: document.getElementById("clear-fi"), copy: document.getElementById("copy-fi") },
+        vi: { text: document.getElementById("text-vi"), clear: document.getElementById("clear-vi"), copy: document.getElementById("copy-vi") }
     };
     const spinner = document.getElementById("spinner");
 
-    // Theme Logic
+    //  Theme Logic 
     const themeToggleBtn = document.getElementById("theme-toggle");
     const darkIcon = document.getElementById("theme-toggle-dark-icon");
     const lightIcon = document.getElementById("theme-toggle-light-icon");
@@ -59,25 +45,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     applyTheme();
 
-    // UI Helpers
+    //  UI Helpers 
     function showSpinner(show) {
         spinner.classList.toggle("hidden", !show);
     }
 
     function showCopiedFeedback(btn) {
         const original = btn.innerHTML;
-        // Green checkmark icon
         btn.innerHTML = `<svg class="icon" style="color: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
         setTimeout(() => { btn.innerHTML = original; }, 1500);
     }
 
-    // Core Logic
+    //  Core Logic 
     
-    // Setup Listeners for Clear & Copy Buttons (Generic for all languages)
+    // Setup Clear & Copy Buttons
     Object.keys(boxes).forEach(lang => {
         const el = boxes[lang];
         
-        // Copy Button Logic
         if(el.copy) {
             el.copy.addEventListener("click", () => {
                 if (el.text.value.trim() === "") return;
@@ -86,10 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // Clear Button Logic (Clears everything)
         if(el.clear) {
             el.clear.addEventListener("click", () => {
-                // Clear all boxes to keep them in sync
                 Object.values(boxes).forEach(b => {
                     b.text.value = "";
                     b.clear.classList.add("hidden");
@@ -97,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // Toggle clear button visibility on input
         if(el.text) {
             el.text.addEventListener("input", () => {
                 el.clear.classList.toggle("hidden", el.text.value === "");
@@ -107,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Translation API Call
     async function performTranslation(sourceText, sourceLang) {
-        // If input is cleared, clear all other boxes too
         if (!sourceText.trim()) {
             Object.keys(boxes).forEach(key => {
                 if (key !== sourceLang) {
@@ -119,35 +99,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         showSpinner(true);
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         try {
             const response = await fetch("/api/translate", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
                 body: JSON.stringify({ text: sourceText, source_lang: sourceLang }),
             });
             
-            if (!response.ok) throw new Error("API Failed");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Translation API Failed");
+            }
             
             const results = await response.json();
             
-            // The API returns a dictionary like { "fi": "...", "vi": "..." }
-            // We iterate through the results and update the corresponding boxes
             Object.keys(results).forEach(langKey => {
                 if (boxes[langKey]) {
                     boxes[langKey].text.value = results[langKey];
-                    // Show the clear button since we added text
                     boxes[langKey].clear.classList.remove("hidden");
                 }
             });
 
         } catch (e) {
             console.error("Translation failed", e);
+            Object.keys(boxes).forEach(key => {
+                if (key !== sourceLang) {
+                    boxes[key].text.value = `Error: ${e.message}`; 
+                }
+            });
         } finally {
             showSpinner(false);
         }
     }
 
-    // Attach Debounced Translation to Inputs
+    // Debounce & Listeners
     const debouncedTranslate = debounce(performTranslation, 600);
 
     Object.keys(boxes).forEach(lang => {

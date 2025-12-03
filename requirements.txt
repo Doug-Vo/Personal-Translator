@@ -1,11 +1,15 @@
-# Flask Web Framework
+# Web Framework & Server
 Flask
+gunicorn
+requests
 
-
-# Library for Google Translate (specific version)
+# Translation API
 googletrans==4.0.0-rc1
 
-requests
-gunicorn
-
+# Utilities
 colorama
+
+# Security Extensions
+Flask-Limiter
+Flask-Talisman
+Flask-WTF
