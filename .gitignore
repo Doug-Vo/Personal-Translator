@@ -23,3 +23,7 @@ Thumbs.db
 # --- Flask ---
 instance/
 .webassets-cache
+
+# --- Personal stuff ---
+
+deploy.md
